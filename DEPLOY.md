@@ -29,16 +29,24 @@ Pages. Actualizar la demo no requiere credenciales de Cloudflare ni tocar el Wor
 6. Convierte las fotos PNG de `assets/` a WebP (calidad 85, mismas dimensiones; unas 15 veces más
    ligeras) y la web pasa a pedir el `.webp`. El PNG se publica también, sin referencias, por si
    alguna página sigue en caché justo después de un despliegue. Los originales no se tocan.
-7. Verifica que todas las rutas locales existan, respetando mayúsculas y minúsculas, y que no
+7. Si existe `overrides.css` en la raíz del repo, lo publica y lo enlaza al final del `<head>`.
+8. Verifica que todas las rutas locales existan, respetando mayúsculas y minúsculas, y que no
    queden restos de desarrollo. Si algo falla, el build se detiene y no se publica nada.
 
 `uploads/`, `guidelines/`, `assets/reference*` y la documentación del design system se conservan
 en el repositorio, pero no se publican.
 
+## Ajustes propios (`overrides.css`)
+
+Las correcciones de la versión publicada que no vienen del export, como evitar el scroll
+horizontal en móviles, van en `overrides.css`. Al estar fuera de `ui_kits/`, una nueva
+exportación de Claude Design no las borra. Si un nuevo export cambia el diseño, revisa que
+sigan siendo necesarias.
+
 ## Actualizar la landing
 
 1. Sustituye los archivos por el nuevo export. Conserva `scripts/`, `package.json`,
-   `package-lock.json`, `.github/`, `.gitignore` y este archivo.
+   `package-lock.json`, `.github/`, `.gitignore`, `overrides.css` (si existe) y este archivo.
 2. Opcional: pruébala en local (ver abajo).
 3. Ejecuta `git add -A && git commit -m "Actualiza la landing" && git push`. El progreso se ve
    en la pestaña **Actions** del repositorio.

@@ -12,7 +12,8 @@
 //   4. Cambia React/ReactDOM de desarrollo por sus builds de producción (con SRI).
 //   5. Si package.json define mextas.publicUrl, añade canonical y la redirección desde github.io.
 //   6. Convierte las fotos PNG de assets/ a WebP y hace que la web pida el .webp.
-//   7. Verifica que todas las rutas locales existan y que no queden restos de desarrollo.
+//   7. Si existe overrides.css en la raíz del repo, lo publica y lo enlaza al final del <head>.
+//   8. Verifica que todas las rutas locales existan y que no queden restos de desarrollo.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -62,6 +63,16 @@ function addPublicUrl(html, entryRel) {
   const tags = `<script>if(/(^|\\.)github\\.io$/.test(location.hostname))location.replace(${JSON.stringify(publicUrl)}+location.search+location.hash)</script>` +
     `<link rel="canonical" href="${publicUrl}"><meta property="og:url" content="${publicUrl}">`;
   return html.replace(charset[0], charset[0] + tags);
+}
+
+// Ajustes propios de la versión publicada (p. ej. correcciones para móvil). Viven en
+// overrides.css, fuera del export, para que una nueva exportación de Claude Design no los borre.
+function addOverrides(html, entryRel) {
+  const file = path.join(ROOT, 'overrides.css');
+  if (!fs.existsSync(file)) return html;
+  if (!/<\/head>/i.test(html)) fail(`no se encontró </head> en ${entryRel}`);
+  emit('overrides.css', fs.readFileSync(file), 'overrides.css');
+  return html.replace(/<\/head>/i, '<link rel="stylesheet" href="./overrides.css">\n</head>');
 }
 
 function fail(msg) {
@@ -193,7 +204,7 @@ function buildLanding(entryRel) {
     stats.inline++;
     return `<script>\n${code}\n</script>`;
   });
-  emit('index.html', addPublicUrl(html, entryRel), entryRel);
+  emit('index.html', addOverrides(addPublicUrl(html, entryRel), entryRel), entryRel);
 
   // Resto de JS y CSS del kit (data.js, ds-loader.js, kit.css, site.css…).
   for (const entry of fs.readdirSync(path.join(ROOT, kitDir), { withFileTypes: true })) {

@@ -1,0 +1,16 @@
+/* Ajustes de la versión publicada en mextas.com/inmobiliaria/.
+   El export original no se toca: el build enlaza este archivo al final del <head>.
+   Objetivo: que ninguna sección provoque scroll horizontal en móviles (320–480 px). */
+
+/* Mapa de contacto: aspect-ratio 16/8 con min-height 240 px le imponía 480 px de ancho. */
+.k-map { max-width: 100%; }
+
+/* Contacto: la columna única debe poder encoger por debajo del ancho de su contenido. */
+@media (max-width: 960px) {
+  .k-contact { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Categorías: en 320–340 px, una sola columna. */
+@media (max-width: 340px) {
+  .k-cats { grid-template-columns: minmax(0, 1fr); }
+}
