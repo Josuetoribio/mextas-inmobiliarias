@@ -10,7 +10,8 @@
 //      aplica en el navegador, así que el código ejecutado es idéntico pero ya no
 //      hace falta cargar Babel en producción.
 //   4. Cambia React/ReactDOM de desarrollo por sus builds de producción (con SRI).
-//   5. Verifica que todas las rutas locales existan y que no queden restos de desarrollo.
+//   5. Si package.json define mextas.publicUrl, añade canonical y la redirección desde github.io.
+//   6. Verifica que todas las rutas locales existan y que no queden restos de desarrollo.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -46,6 +47,21 @@ const REACT_PROD = {
 };
 
 const MEDIA_EXT = /\.(?:jpe?g|png|webp|avif|gif|svg|mp4|webm|woff2?|ttf|otf)$/i;
+
+// La demo se publica en GitHub Pages pero se visita en mextas.com/<ruta>/ (Worker mextas-router).
+// Si package.json define mextas.publicUrl, se añaden canonical y og:url, y quien entre por
+// github.io (enlaces viejos, buscadores) pasa a la URL pública conservando query y hash.
+function addPublicUrl(html, entryRel) {
+  const publicUrl = pkg.mextas && pkg.mextas.publicUrl;
+  if (!publicUrl) return html;
+  if (!/^https:\/\/[^/?#]+\/(?:[^?#]*\/)?$/.test(publicUrl)) fail(`mextas.publicUrl debe empezar por https:// y terminar en "/": ${publicUrl}`);
+  if (/rel=["']?canonical|property=["']og:url/i.test(html)) fail(`${entryRel} ya tiene canonical u og:url`);
+  const charset = html.match(/<meta\s+charset=["']?utf-8["']?\s*\/?>/i);
+  if (!charset) fail(`no se encontró <meta charset="utf-8"> en ${entryRel}`);
+  const tags = `<script>if(/(^|\\.)github\\.io$/.test(location.hostname))location.replace(${JSON.stringify(publicUrl)}+location.search+location.hash)</script>` +
+    `<link rel="canonical" href="${publicUrl}"><meta property="og:url" content="${publicUrl}">`;
+  return html.replace(charset[0], charset[0] + tags);
+}
 
 function fail(msg) {
   console.error(`\n✗ Build fallido: ${msg}`);
@@ -176,7 +192,7 @@ function buildLanding(entryRel) {
     stats.inline++;
     return `<script>\n${code}\n</script>`;
   });
-  emit('index.html', html, entryRel);
+  emit('index.html', addPublicUrl(html, entryRel), entryRel);
 
   // Resto de JS y CSS del kit (data.js, ds-loader.js, kit.css, site.css…).
   for (const entry of fs.readdirSync(path.join(ROOT, kitDir), { withFileTypes: true })) {

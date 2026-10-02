@@ -11,6 +11,9 @@
   "devDependencies": {
     "@babel/standalone": "7.29.0"
   },
+  "mextas": {
+    "publicUrl": "https://mextas.com/inmobiliaria/"
+  },
   "engines": {
     "node": ">=20"
   }
