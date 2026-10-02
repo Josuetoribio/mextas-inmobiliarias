@@ -26,7 +26,10 @@ Pages. Actualizar la demo no requiere credenciales de Cloudflare ni tocar el Wor
 4. Usa React/ReactDOM 18.3.1 de producción (con SRI) en lugar de los de desarrollo.
 5. Añade `canonical` y `og:url` con la URL pública (`mextas.publicUrl` en `package.json`). Quien
    entra por github.io pasa a esa URL conservando la ruta interna (`#…`).
-6. Verifica que todas las rutas locales existan, respetando mayúsculas y minúsculas, y que no
+6. Convierte las fotos PNG de `assets/` a WebP (calidad 85, mismas dimensiones; unas 15 veces más
+   ligeras) y la web pasa a pedir el `.webp`. El PNG se publica también, sin referencias, por si
+   alguna página sigue en caché justo después de un despliegue. Los originales no se tocan.
+7. Verifica que todas las rutas locales existan, respetando mayúsculas y minúsculas, y que no
    queden restos de desarrollo. Si algo falla, el build se detiene y no se publica nada.
 
 `uploads/`, `guidelines/`, `assets/reference*` y la documentación del design system se conservan

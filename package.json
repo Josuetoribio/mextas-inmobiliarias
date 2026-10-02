@@ -9,7 +9,8 @@
     "preview": "node scripts/preview.mjs"
   },
   "devDependencies": {
-    "@babel/standalone": "7.29.0"
+    "@babel/standalone": "7.29.0",
+    "sharp": "0.35.5"
   },
   "mextas": {
     "publicUrl": "https://mextas.com/inmobiliaria/"

@@ -11,7 +11,8 @@
 //      hace falta cargar Babel en producción.
 //   4. Cambia React/ReactDOM de desarrollo por sus builds de producción (con SRI).
 //   5. Si package.json define mextas.publicUrl, añade canonical y la redirección desde github.io.
-//   6. Verifica que todas las rutas locales existan y que no queden restos de desarrollo.
+//   6. Convierte las fotos PNG de assets/ a WebP y hace que la web pida el .webp.
+//   7. Verifica que todas las rutas locales existan y que no queden restos de desarrollo.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -204,6 +205,45 @@ function buildLanding(entryRel) {
   return stats;
 }
 
+// --- Imágenes -----------------------------------------------------------------
+
+// Las fotos PNG de assets/ pesan varios MB: se publican también en WebP (calidad 85, mismas
+// dimensiones) y todas las referencias de dist/ pasan al .webp. El PNG se queda en dist/ sin
+// referencias para que una página que siga en caché tras un despliegue no pierda imágenes.
+const WEBP_OPTIONS = { quality: 85, effort: 6, smartSubsample: true };
+const webpRenames = new Map(); // 'assets/x.png' → 'assets/x.webp'
+
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const refPattern = (relPath) => new RegExp(`(^|[^\\w-])${escapeRe(relPath)}(?=$|[^\\w.-])`, 'g');
+
+async function convertPngsToWebp() {
+  const pngs = listDist().filter((f) => f.startsWith('assets/') && /\.png$/i.test(f));
+  if (!pngs.length) return { count: 0 };
+  let sharp;
+  try { sharp = (await import('sharp')).default; } catch { fail('hay imágenes PNG en assets/ y falta la dependencia "sharp" (ejecuta npm install)'); }
+  let before = 0, after = 0;
+  for (const png of pngs) {
+    const webp = png.replace(/\.png$/i, '.webp');
+    const input = fs.readFileSync(path.join(OUT, png));
+    const output = await sharp(input).webp(WEBP_OPTIONS).toBuffer();
+    emit(webp, output, `${png} (WebP)`);
+    webpRenames.set(png, webp);
+    before += input.length;
+    after += output.length;
+  }
+  // HTML, CSS y JS (incluido _ds_bundle.js) pasan a pedir el .webp.
+  let refs = 0;
+  for (const f of listDist().filter((name) => /\.(?:html|css|js)$/i.test(name))) {
+    const original = read(path.join(OUT, f));
+    let text = original;
+    for (const [png, webp] of webpRenames) {
+      text = text.replace(refPattern(png), (_, pre) => { refs++; return pre + webp; });
+    }
+    if (text !== original) fs.writeFileSync(path.join(OUT, f), text);
+  }
+  return { count: pngs.length, before, after, refs };
+}
+
 // --- Verificación de dist/ ----------------------------------------------------
 
 function listDist(dir = OUT, base = '') {
@@ -241,6 +281,9 @@ function verifyDist() {
     if (text.includes('../../')) problems.push(`${f}: todavía contiene "../../"`);
     if (/text\/babel|@babel\/standalone|react(?:-dom)?\.development\.js/.test(text)) problems.push(`${f}: quedan restos de desarrollo (Babel o React dev)`);
     if (/file:\/\/\/|\b[A-Za-z]:\\(?:[\w .-]+\\)/.test(text)) problems.push(`${f}: contiene una ruta local de Windows o file://`);
+    for (const png of webpRenames.keys()) {
+      if (refPattern(png).test(text)) problems.push(`${f}: sigue pidiendo ${png} en lugar de su versión WebP`);
+    }
 
     if (f.endsWith('.html')) {
       for (const m of text.matchAll(/\b(?:src|href)\s*=\s*"([^"]*)"/g)) {
@@ -281,6 +324,7 @@ emit('styles.css', fs.readFileSync(path.join(ROOT, 'styles.css')), 'styles.css')
 const tokens = copyTree('tokens');
 const componentsCss = copyTree('components', (r) => r.endsWith('.css'));
 const assets = copyTree('assets', (r) => !/^assets\/reference(?:\/|-)/.test(r));
+const images = await convertPngsToWebp();
 
 const files = verifyDist();
 const size = files.reduce((n, f) => n + fs.statSync(path.join(OUT, f)).size, 0);
@@ -290,4 +334,7 @@ console.log(`  JSX precompilado: ${landing.compiled.length} archivo(s) + ${landi
 console.log(`  JS/CSS del kit copiados: ${landing.copied.join(', ') || '—'}`);
 console.log(`  _ds_bundle.js: quitadas ${bundle.removed.length} secciones ui_kits/ (${(bundle.before / 1024).toFixed(0)} KB → ${(bundle.after / 1024).toFixed(0)} KB)`);
 console.log(`  tokens: ${tokens}, CSS de componentes: ${componentsCss}, assets: ${assets}`);
+if (images.count) {
+  console.log(`  imágenes: ${images.count} PNG → WebP (${(images.before / 1048576).toFixed(1)} MB → ${(images.after / 1048576).toFixed(1)} MB), ${images.refs} referencias actualizadas`);
+}
 console.log(`  dist/: ${files.length} archivos, ${(size / 1048576).toFixed(1)} MB, todas las referencias locales verificadas`);
