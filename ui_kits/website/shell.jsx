@@ -6,21 +6,39 @@ const TRUST = [['ShieldCheck', 'Propiedades verificadas', '100% confiables'], ['
 const STATS = [['+500', 'Propiedades', 'disponibles'], ['+10', 'Años de', 'experiencia'], ['+1,200', 'Clientes', 'satisfechos'], ['+30', 'Zonas premium', 'en México']];
 const isHeroRoute = (r) => r.path === '/' || r.path === '/vender' || r.path === '/nosotros' || (r.parts[0] === 'desarrollos' && !!r.parts[1]);
 const isActive = (route, to) => (to === '/' ? route.path === '/' : route.path.startsWith(to));
+/* Secciones de la portada a las que lleva el menú (id del DOM = ruta sin la barra). */
+const SECTIONS = ['/', '/propiedades', '/desarrollos', '/servicios', '/nosotros', '/vender', '/blog', '/contacto'];
+const sectionId = (to) => (to === '/' ? 'inicio' : to.slice(1));
 
 function Header() {
-  const { route, favs, openModal } = useApp();
+  const { route, favs, openModal, goSection } = useApp();
   const [scrolled, setScrolled] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [spy, setSpy] = useState('inicio');
+  const home = route.path === '/';
+  /* En la portada, el menú resalta la sección que se está viendo. */
+  useEffect(() => {
+    if (!home) return;
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) setSpy(e.target.id); }), { rootMargin: '-35% 0px -60% 0px' });
+    SECTIONS.forEach((to) => { const el = document.getElementById(sectionId(to)); el && io.observe(el); });
+    return () => io.disconnect();
+  }, [home]);
+  const active = (to) => (home ? spy === sectionId(to) : to !== '/' && isActive(route, to));
+  const toSection = (to, close) => (e) => {
+    if (!SECTIONS.includes(to)) { close && setMenu(false); return; }
+    e.preventDefault();
+    if (close) { setMenu(false); setTimeout(() => goSection(sectionId(to)), 60); } else goSection(sectionId(to));
+  };
   useEffect(() => { const on = () => setScrolled(window.scrollY > 40); on(); window.addEventListener('scroll', on, { passive: true }); return () => window.removeEventListener('scroll', on); }, []);
   useEffect(() => setMenu(false), [route.path]);
   const top = isHeroRoute(route) && !scrolled;
-  const mnav = [...NAV, ['/vender', 'Vender'], ['/blog', 'Blog'], ['/favoritos', 'Favoritos (' + favs.length + ')']];
+  const mnav = [...NAV.slice(0, -1), ['/vender', 'Vender'], ['/blog', 'Blog'], NAV[NAV.length - 1], ['/favoritos', 'Favoritos (' + favs.length + ')']];
   return (<>
     <header className={'k-header ' + (top ? 'is-top' : 'is-solid')}>
       <div className="k-container k-wide k-header__in">
         <MX.Logo tone="light" size="sm" href="#/" />
         <nav className="k-nav" aria-label="Principal">
-          {NAV.map(([to, l]) => <a key={to} href={'#' + to} className={isActive(route, to) ? 'is-active' : ''} aria-current={isActive(route, to) ? 'page' : undefined}>{l}</a>)}
+          {NAV.map(([to, l]) => <a key={to} href={'#' + to} onClick={toSection(to)} className={active(to) ? 'is-active' : ''} aria-current={active(to) ? 'true' : undefined}>{l}</a>)}
         </nav>
         <div className="k-header__right">
           <a href="#/favoritos" className="k-favlink" aria-label={'Favoritos, ' + favs.length + ' guardadas'}>
@@ -37,7 +55,7 @@ function Header() {
       <div className="k-mmenu">
         <div className="k-mmenu__top"><MX.Logo tone="light" size="sm" /><MX.IconButton icon="X" label="Cerrar menú" variant="ghost" onClick={() => setMenu(false)} /></div>
         <nav aria-label="Menú móvil">
-          {mnav.map(([to, l]) => <a key={to} href={'#' + to} className={isActive(route, to) ? 'is-active' : ''} onClick={() => setMenu(false)}>{l}<MX.Icon name="ArrowRight" size={18} /></a>)}
+          {mnav.map(([to, l]) => <a key={to} href={'#' + to} className={active(to) ? 'is-active' : ''} onClick={toSection(to, true)}>{l}<MX.Icon name="ArrowRight" size={18} /></a>)}
         </nav>
         <MX.Button fullWidth size="lg" onClick={() => { setMenu(false); openModal('contact', { channel: 'general' }); }}>Consultar propiedad</MX.Button>
       </div>
@@ -46,7 +64,7 @@ function Header() {
 }
 
 function Footer() {
-  const { openModal, toast } = useApp();
+  const { openModal, toast, goSection } = useApp();
   const col = (t, items) => (
     <div><h4>{t}</h4><ul>{items.map(([l, h]) => <li key={l}>{typeof h === 'function' ? <button type="button" className="k-linkbtn" onClick={h}>{l}</button> : <a href={h}>{l}</a>}</li>)}</ul></div>
   );
@@ -60,7 +78,7 @@ function Footer() {
             <p>Conectamos personas con oportunidades<br />inmobiliarias únicas. Asesoría experta,<br />transparente y personalizada.</p>
             <div className="k-social">{[['Facebook', 'Facebook'], ['Instagram', 'Instagram'], ['Linkedin', 'LinkedIn']].map(([i, l]) => <button key={l} type="button" aria-label={l} onClick={() => social(l)}><MX.Icon name={i} size={16} /></button>)}</div>
           </div>
-          {col('Navegación', NAV.map(([to, l]) => [l, '#' + to]))}
+          {col('Navegación', NAV.map(([to, l]) => [l, () => goSection(sectionId(to))]))}
           {col('Tipo de propiedad', [['Casas', '#/propiedades?tipo=Casa'], ['Departamentos', '#/propiedades?tipo=Departamento'], ['Terrenos', '#/propiedades?tipo=Terreno'], ['Oficinas', '#/propiedades?tipo=Oficina'], ['Locales', '#/propiedades?tipo=Local'], ['Desarrollos', '#/desarrollos']])}
           {col('Información', [['Blog', '#/blog'], ['Guía de compra', '#/blog/que-revisar-antes-de-comprar-una-casa'], ['Guía de venta', '#/vender'], ['Términos y condiciones', () => openModal('legal', { doc: 'terminos' })], ['Aviso de privacidad', () => openModal('legal', { doc: 'privacidad' })]])}
           <div><h4>Contacto</h4><ul>

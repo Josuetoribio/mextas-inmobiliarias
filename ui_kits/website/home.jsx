@@ -2,11 +2,12 @@
 const MX = window.MX;
 
 function Home() {
-  const { openModal } = useApp();
+  const { openModal, takePendingSection } = useApp();
   const D = window.MXData;
   const featured = D.properties.filter((p) => p.badge).slice(0, 4);
+  React.useEffect(() => { const id = takePendingSection(); if (id) requestAnimationFrame(() => scrollToSection(id, false)); }, []);
   return (<>
-    <section className="k-hero" aria-label="Presentación">
+    <section className="k-hero" id="inicio" aria-label="Presentación">
       <img className="k-hero__img" src={D.IMG.hero} alt="Residencia contemporánea de concreto y madera iluminada al anochecer" fetchpriority="high" />
       <div className="k-hero__shade" />
       <div className="k-container k-wide k-hero__content">
@@ -22,7 +23,7 @@ function Home() {
     </section>
     <div className="k-container k-wide k-search-wrap"><PropertySearch /></div>
 
-    <section className="k-section"><div className="k-container k-wide">
+    <section className="k-section" id="propiedades"><div className="k-container k-wide">
       <Reveal><MX.SectionHeader eyebrow="Propiedades destacadas" title="Descubre nuestras propiedades exclusivas" action={<MX.Button variant="outline" size="sm" iconRight="ArrowRight" href="#/propiedades">Ver todas</MX.Button>} /></Reveal>
       <div className="k-grid k-grid--4 k-mt">{featured.map((p, i) => <Reveal key={p.id} delay={i * 90}><PCard p={p} /></Reveal>)}</div>
     </div></section>
@@ -40,7 +41,10 @@ function Home() {
       </div>
     </div></section>
 
-    <section className="k-section k-dark"><div className="k-container k-wide k-why">
+    <DevelopmentsTeaser />
+    <ServicesTeaser />
+
+    <section className="k-section k-dark" id="nosotros"><div className="k-container k-wide k-why">
       <Reveal>
         <p className="k-eyebrow">Por qué elegir Mextas</p>
         <h2>Más que propiedades,<br />creamos <em>oportunidades.</em></h2>
@@ -50,7 +54,7 @@ function Home() {
       <Reveal delay={150}><StatsRow /><p className="k-demo-note">Cifras demostrativas para este prototipo.</p></Reveal>
     </div></section>
 
-    <section className="k-sell" aria-label="Vende tu propiedad">
+    <section className="k-sell" id="vender" aria-label="Vende tu propiedad">
       <img src={D.IMG.interior} alt="" loading="lazy" /><div className="k-sell__shade" />
       <div className="k-container k-wide k-sell__in"><Reveal className="k-sell__box">
         <p className="k-eyebrow">Propietarios</p>
@@ -63,10 +67,12 @@ function Home() {
       </Reveal></div>
     </section>
 
-    <section className="k-section"><div className="k-container k-wide">
+    <section className="k-section" id="blog"><div className="k-container k-wide">
       <Reveal><MX.SectionHeader eyebrow="Guías Mextas" title="Consejos para tomar mejores decisiones inmobiliarias" action={<MX.Button variant="outline" size="sm" iconRight="ArrowRight" href="#/blog">Ir al blog</MX.Button>} /></Reveal>
       <div className="k-grid k-grid--4 k-mt">{D.posts.map((p, i) => <Reveal key={p.slug} delay={i * 90}><PostCard post={p} /></Reveal>)}</div>
     </div></section>
+
+    <ContactSection home />
   </>);
 }
 

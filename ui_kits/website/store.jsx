@@ -10,6 +10,29 @@ function parseHash() {
 }
 const readLS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
 
+/* Desplaza a una sección de la portada. Al terminar corrige la posición por si alguna
+   imagen diferida cambió la altura de lo que hay arriba durante el desplazamiento. */
+function scrollToSection(id, smooth) {
+  const behavior = smooth ? 'smooth' : 'instant';
+  if (id === 'inicio') { window.scrollTo({ top: 0, behavior }); return; }
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior, block: 'start' });
+  const t0 = performance.now();
+  let t;
+  const settle = () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      window.removeEventListener('scroll', settle);
+      if (performance.now() - t0 > 2500) return;
+      const off = el.getBoundingClientRect().top - (parseFloat(getComputedStyle(el).scrollMarginTop) || 0);
+      if (Math.abs(off) > 4) el.scrollIntoView({ behavior: 'instant', block: 'start' });
+    }, 160);
+  };
+  window.addEventListener('scroll', settle, { passive: true });
+  settle();
+}
+
 function AppProvider({ children }) {
   const D = window.MXData;
   const [route, setRoute] = useState(parseHash);
@@ -19,7 +42,7 @@ function AppProvider({ children }) {
   const [modal, setModal] = useState(null);
 
   useEffect(() => {
-    const on = () => { const r = parseHash(); setRoute((prev) => { if (prev.path !== r.path) window.scrollTo(0, 0); return r; }); };
+    const on = () => { const r = parseHash(); setRoute((prev) => { if (prev.path !== r.path) window.scrollTo({ top: 0, behavior: 'instant' }); return r; }); };
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
@@ -30,6 +53,16 @@ function AppProvider({ children }) {
     if (opts && opts.replace) { history.replaceState(null, '', '#' + to); setRoute(parseHash()); }
     else location.hash = to;
   }, []);
+  /* El menú baja a su sección de la portada; desde otra página, vuelve a la portada y baja. */
+  const routeRef = useRef(route);
+  routeRef.current = route;
+  const pendingSection = useRef(null);
+  const goSection = useCallback((id) => {
+    if (routeRef.current.path === '/') { scrollToSection(id, true); return; }
+    pendingSection.current = id;
+    navigate('/');
+  }, [navigate]);
+  const takePendingSection = useCallback(() => { const id = pendingSection.current; pendingSection.current = null; return id; }, []);
   const toast = useCallback((t) => {
     const id = Date.now() + Math.random();
     setToasts((l) => [...l.slice(-2), { id, ...t }]);
@@ -52,7 +85,7 @@ function AppProvider({ children }) {
 
   const bySlug = useMemo(() => Object.fromEntries(D.properties.map((p) => [p.slug, p])), []);
   const value = {
-    route, navigate, favs, isFav: (p) => favs.includes(p.slug), toggleFav, cmp, isCmp: (p) => cmp.includes(p.slug), toggleCompare,
+    route, navigate, goSection, takePendingSection, favs, isFav: (p) => favs.includes(p.slug), toggleFav, cmp, isCmp: (p) => cmp.includes(p.slug), toggleCompare,
     clearCompare: () => setCmp([]), setCompareList: (l) => setCmp(l.slice(0, 3)), cmpItems: cmp.map((s) => bySlug[s]).filter(Boolean), favItems: favs.map((s) => bySlug[s]).filter(Boolean), bySlug,
     toasts, toast, dismiss, modal, openModal: (kind, props) => setModal({ kind, props: props || {}, id: Date.now() }), closeModal: () => setModal(null),
   };

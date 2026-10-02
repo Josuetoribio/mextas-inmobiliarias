@@ -89,6 +89,16 @@ function Developments() {
   </>);
 }
 
+function DevelopmentsTeaser() {
+  const D = window.MXData;
+  return (
+    <section className="k-section" id="desarrollos"><div className="k-container k-wide">
+      <Reveal><MX.SectionHeader eyebrow="Desarrollos" title="Proyectos residenciales seleccionados" action={<MX.Button variant="outline" size="sm" iconRight="ArrowRight" href="#/desarrollos">Ver todos</MX.Button>} /></Reveal>
+      <div className="k-mt">{D.developments.slice(0, 2).map((d, i) => <DevRow key={d.slug} d={d} i={i + 1} />)}</div>
+    </div></section>
+  );
+}
+
 function DevRow({ d, i }) {
   const D = window.MXData;
   return (
@@ -169,5 +179,5 @@ function DevelopmentDetail({ slug }) {
   </>);
 }
 
-Object.assign(window, { NotFound, Favorites, Compare, Developments, DevelopmentDetail });
+Object.assign(window, { NotFound, Favorites, Compare, Developments, DevelopmentsTeaser, DevelopmentDetail });
 })();

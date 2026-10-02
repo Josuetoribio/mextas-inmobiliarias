@@ -9,6 +9,16 @@ function SvcGrid({ items }) {
   </article>)}</div>;
 }
 
+function ServicesTeaser() {
+  const D = window.MXData;
+  return (
+    <section className="k-section k-white k-bt" id="servicios"><div className="k-container k-wide">
+      <Reveal><MX.SectionHeader eyebrow="Servicios" title="Acompañamiento completo, de la búsqueda al cierre" action={<MX.Button variant="outline" size="sm" iconRight="ArrowRight" href="#/servicios">Ver servicios</MX.Button>} /></Reveal>
+      <Reveal className="k-mt"><SvcGrid items={D.services.buyers} /></Reveal>
+    </div></section>
+  );
+}
+
 function Services() {
   const D = window.MXData;
   const { openModal } = useApp();
@@ -109,19 +119,29 @@ function Sell() {
 function Contact() {
   return (<>
     <PageHead eyebrow="Contacto" title="Hablemos de tu próxima propiedad" crumbs={[{ label: 'Inicio', href: '#/' }, { label: 'Contacto' }]} text="Escríbenos o visítanos. Un asesor te responde en menos de 2 horas hábiles." />
-    <section className="k-section k-pt0"><div className="k-container k-wide k-contact">
-      <div>
-        <div className="k-info">
-          <div><MX.Icon name="Phone" size={20} /><small>Teléfono</small><a href="tel:+523312345678">33 1234 5678</a><span>También por WhatsApp</span></div>
-          <div><MX.Icon name="Mail" size={20} /><small>Correo</small><a href="mailto:hola@mextas.mx">hola@mextas.mx</a><span>Respuesta el mismo día</span></div>
-          <div><MX.Icon name="Clock" size={20} /><small>Horarios</small><b>Lun – Vie · 9:00 – 19:00</b><span>Sáb · 10:00 – 14:00</span></div>
-          <div><MX.Icon name="MapPin" size={20} /><small>Oficinas</small><b>Guadalajara · Monterrey · CDMX</b><span>Visitas con cita</span></div>
-        </div>
-        <MockMap label="Oficina Guadalajara · Av. Patria, Zapopan" />
-      </div>
-      <div className="k-card"><h3>Envíanos un mensaje</h3><p>Selecciona el tipo de consulta para canalizarte con el área correcta.</p><ContactForm inline showType channel="general" /></div>
-    </div></section>
+    <ContactSection />
   </>);
+}
+
+/* Datos de contacto, mapa y formulario. En la portada lleva encabezado propio. */
+function ContactSection({ home }) {
+  return (
+    <section className={home ? 'k-section k-white k-bt' : 'k-section k-pt0'} id={home ? 'contacto' : undefined}>
+      {home ? <div className="k-container k-wide"><Reveal><MX.SectionHeader eyebrow="Contacto" title="Hablemos de tu próxima propiedad" /></Reveal></div> : null}
+      <div className={'k-container k-wide k-contact' + (home ? ' k-mt' : '')}>
+        <div>
+          <div className="k-info">
+            <div><MX.Icon name="Phone" size={20} /><small>Teléfono</small><a href="tel:+523312345678">33 1234 5678</a><span>También por WhatsApp</span></div>
+            <div><MX.Icon name="Mail" size={20} /><small>Correo</small><a href="mailto:hola@mextas.mx">hola@mextas.mx</a><span>Respuesta el mismo día</span></div>
+            <div><MX.Icon name="Clock" size={20} /><small>Horarios</small><b>Lun – Vie · 9:00 – 19:00</b><span>Sáb · 10:00 – 14:00</span></div>
+            <div><MX.Icon name="MapPin" size={20} /><small>Oficinas</small><b>Guadalajara · Monterrey · CDMX</b><span>Visitas con cita</span></div>
+          </div>
+          <MockMap label="Oficina Guadalajara · Av. Patria, Zapopan" />
+        </div>
+        <div className="k-card"><h3>Envíanos un mensaje</h3><p>Selecciona el tipo de consulta para canalizarte con el área correcta.</p><ContactForm inline showType channel="general" /></div>
+      </div>
+    </section>
+  );
 }
 
 function Blog() {
@@ -164,5 +184,5 @@ function BlogPost({ slug }) {
   </>);
 }
 
-Object.assign(window, { Services, About, Sell, Contact, Blog, BlogPost });
+Object.assign(window, { Services, ServicesTeaser, About, ContactSection, Sell, Contact, Blog, BlogPost });
 })();
