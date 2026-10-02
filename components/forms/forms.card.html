@@ -1,0 +1,23 @@
+<!-- @dsCard group="Components" viewport="700x520" name="Forms" subtitle="Input, Select, Checkbox, Radio, Switch, Slider, Field" -->
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Forms</title><link rel="stylesheet" href="../../styles.css"><script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script><script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script><script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script><script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script><script src="../../_ds_bundle.js"></script><style>body{margin:0;padding:24px;background:var(--bg-page)}.r{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.col{display:flex;flex-direction:column;gap:18px}.lbl{font:500 11px/1 var(--font-sans);color:var(--fg-3);letter-spacing:.04em;width:90px;flex-shrink:0}.dark{background:var(--bg-inverse);padding:18px;border-radius:4px}</style></head><body><div id="root"></div><script type="text/babel">const { Input, Select, Checkbox, Radio, Switch, Slider } = window.MextasDesignSystem_8aabb9;
+function App(){const [t,setT]=React.useState('');const [p,setP]=React.useState('Sin límite');const [c,setC]=React.useState(true);const [v,setV]=React.useState('presencial');const [s,setS]=React.useState(true);const [e,setE]=React.useState(20);
+return <div className="col" style={{gap:20}}>
+<div style={{display:'grid',gridTemplateColumns:'1.3fr 1fr 1fr',gap:14}}>
+<Input label="Ubicación" placeholder="Ciudad, zona o colonia" iconRight="Search"/>
+<Select label="Tipo de propiedad" placeholder="Selecciona tipo" value={t} onChange={setT} options={['Casa','Departamento','Penthouse','Terreno','Oficina']}/>
+<Select label="Precio máximo" value={p} onChange={setP} options={['Hasta $5M','Hasta $10M','Hasta $20M','Sin límite']}/>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+<Input label="Correo" required defaultValue="ana@correo" error="Ingresa un correo válido"/>
+<Input label="Teléfono" hint="10 dígitos" placeholder="55 1234 5678"/>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+<Radio variant="card" icon="MapPin" name="v" value="presencial" label="Presencial" description="Recorrido en sitio con un asesor" checked={v==='presencial'} onChange={setV}/>
+<Radio variant="card" icon="Video" name="v" value="video" label="Videollamada" description="Recorrido guiado en vivo" checked={v==='video'} onChange={setV}/>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'center'}}>
+<div className="col" style={{gap:12}}><Checkbox label="Quiero recibir información sobre esta propiedad." checked={c} onChange={setC}/><Switch label="Pet friendly" checked={s} onChange={setS}/></div>
+<Slider label="Enganche" min={10} max={60} value={e} onChange={setE} format={x=>x+'%'}/>
+</div>
+</div>}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);</script></body></html>
