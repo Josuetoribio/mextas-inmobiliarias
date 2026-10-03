@@ -9,6 +9,7 @@ function parseHash() {
   return { path: path || '/', parts: (path || '/').split('/').filter(Boolean), query: new URLSearchParams(qs || '') };
 }
 const readLS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+const writeLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
 
 /* Desplaza a una sección de la portada. Al terminar corrige la posición por si alguna
    imagen diferida cambió la altura de lo que hay arriba durante el desplazamiento. */
@@ -46,8 +47,8 @@ function AppProvider({ children }) {
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);
   }, []);
-  useEffect(() => { localStorage.setItem('mextas:favs', JSON.stringify(favs)); }, [favs]);
-  useEffect(() => { localStorage.setItem('mextas:compare', JSON.stringify(cmp)); }, [cmp]);
+  useEffect(() => { writeLS('mextas:favs', favs); }, [favs]);
+  useEffect(() => { writeLS('mextas:compare', cmp); }, [cmp]);
 
   const navigate = useCallback((to, opts) => {
     if (opts && opts.replace) { history.replaceState(null, '', '#' + to); setRoute(parseHash()); }

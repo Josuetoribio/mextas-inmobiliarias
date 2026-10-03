@@ -90,7 +90,8 @@ function Listings() {
   const [adv, setAdv] = React.useState(false);
   const [q, setQ] = React.useState(f.q);
   const isMobile = useMedia('(max-width: 1100px)');
-  const listMode = f.view === 'list' && !useMedia('(max-width: 640px)');
+  const isPhone = useMedia('(max-width: 640px)'); // los hooks siempre en el mismo orden: si no, cambiar a «Lista» deja la página en blanco
+  const listMode = f.view === 'list' && !isPhone;
   React.useEffect(() => { setLoading(true); const t = setTimeout(() => setLoading(false), 450); return () => clearTimeout(t); }, [key]);
   React.useEffect(() => { setQ(f.q); }, [f.q]);
   React.useEffect(() => { if (q === f.q) return; const t = setTimeout(() => set({ q }), 380); return () => clearTimeout(t); }, [q]);
